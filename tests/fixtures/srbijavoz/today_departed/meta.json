@@ -1,0 +1,37 @@
+{
+  "source": "srbijavoz",
+  "case": "today_departed",
+  "origin": "recon",
+  "query": {
+    "url": "https://w3.srbvoz.rs/redvoznje//direktni/TPS%20NOVI%20SAD/24402/BEOGRAD%20CENTAR/16052/09.10.2026/0000/sr",
+    "method": "GET",
+    "from_id": 24402,
+    "to_id": 16052,
+    "date": "2026-10-09"
+  },
+  "captured_at": "2026-10-09T12:49:05Z",
+  "http_status": 200,
+  "content_type": "text/html; charset=utf-8",
+  "headers": {
+    "cache-control": "private"
+  },
+  "raw_sha": "d820356d350ad2f1badfb45f31e8b380cd1e3949cf19166f08749ed81b1d4e49",
+  "trimmed": {
+    "unit": "train",
+    "kept": 2,
+    "of": 13,
+    "kept_ids": [
+      "641",
+      "557"
+    ],
+    "span": "div#rezultati"
+  },
+  "fingerprint": {
+    "container": "<div id=\"rezultati\"",
+    "rows": "<table cellpadding=\"2\" cellspacing=\"0\" class=\"tabela\">"
+  },
+  "scrubbed": true,
+  "scrub": [],
+  "notes": "Same-day search at 14:49 Belgrade: 641 (05:54) had departed and 557 (22:39) had not; both stay listed (w3 is a timetable). Pre-2026-10-12 train numbers. The Kasni field is blank for every train, departed ones included.",
+  "body_sha256": "9fad5fa2fd0259a1c413849601095b01406c3f55026deb1e5653c4601b913099"
+}

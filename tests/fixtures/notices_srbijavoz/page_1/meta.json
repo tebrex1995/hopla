@@ -1,0 +1,37 @@
+{
+  "source": "notices_srbijavoz",
+  "case": "page_1",
+  "origin": "recon",
+  "query": {
+    "url": "https://www.srbvoz.rs/wp-json/wp/v2/info_post?per_page=100",
+    "method": "GET"
+  },
+  "captured_at": "2026-10-09T11:10:15Z",
+  "http_status": 200,
+  "content_type": "application/json; charset=UTF-8",
+  "headers": {
+    "x-wp-total": "20679",
+    "x-wp-totalpages": "207",
+    "link": "<https://www.srbvoz.rs/wp-json/wp/v2/info_post?per_page=100&page=2>; rel=\"next\""
+  },
+  "raw_sha": "5367da09ab8c148915c1ee1f6de0718556e6e75583f8ea08605fef0af992dec7",
+  "trimmed": {
+    "unit": "item",
+    "kept": 3,
+    "of": 100,
+    "kept_ids": [
+      "39340",
+      "39339",
+      "39309"
+    ],
+    "span": null
+  },
+  "fingerprint": {
+    "array": "[{\"id\":",
+    "item": "\"content\":{\"rendered\":"
+  },
+  "scrubbed": true,
+  "scrub": [],
+  "notes": "Byte-exact item spans (escapes as served). 39340: a delay whose modified differs from date (FR-055); 39339: a BG:VOZ cancellation ('ne saobraća'); 39309: an NS-line delay of ~23 min.",
+  "body_sha256": "72bdd45c7b403a1338f0f628b51022726b5ff615862309c0745f7021d13f3b17"
+}

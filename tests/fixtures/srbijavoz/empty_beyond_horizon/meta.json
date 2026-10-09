@@ -1,0 +1,28 @@
+{
+  "source": "srbijavoz",
+  "case": "empty_beyond_horizon",
+  "origin": "recon",
+  "query": {
+    "url": "https://w3.srbvoz.rs/redvoznje//direktni/TPS%20NOVI%20SAD/24402/BEOGRAD%20CENTAR/16052/20.12.2026/0000/sr",
+    "method": "GET",
+    "from_id": 24402,
+    "to_id": 16052,
+    "date": "2026-12-20"
+  },
+  "captured_at": "2026-10-09T12:51:24Z",
+  "http_status": 200,
+  "content_type": "text/html; charset=utf-8",
+  "headers": {
+    "cache-control": "private"
+  },
+  "raw_sha": "2b39ebfb4d136c1561e8f70481e43bd3ba4a6f9f43e7d032a78db9f40bce7141",
+  "trimmed": null,
+  "fingerprint": {
+    "container": "<div id=\"rezultati\"",
+    "empty_text": "Nema vozova za traženu relaciju!"
+  },
+  "scrubbed": true,
+  "scrub": [],
+  "notes": "A date after the 2026-12-13 annual change: the result block is identical to empty_no_service, so empty_marker is none (no-service and no-data look the same). Untrimmed.",
+  "body_sha256": "2b39ebfb4d136c1561e8f70481e43bd3ba4a6f9f43e7d032a78db9f40bce7141"
+}

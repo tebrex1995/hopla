@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RED VOŽNJE - Srbija Voz a.d. </title>
+    <link href="/redvoznje/Content/favicon.ico" rel="icon" type="image/x-icon" />  
+    <link href="/redvoznje/Content/Site.css" rel="stylesheet" />
+    <link href="/redvoznje/Content/theme/jquery-ui.min.css" rel="stylesheet" />
+    <link href="/redvoznje/Content/theme/jquery-ui.theme.css" rel="stylesheet" />
+    <link href="/redvoznje/Content/jquery.timepicker.css" rel="stylesheet" />
+   
+
+
+    <script src="/redvoznje/Scripts/modernizr.js"></script>
+    <script src="/redvoznje/Scripts/jquery.js"></script>
+    <script src="/redvoznje/Scripts/jquery-ui.min.js"></script>
+	
+    <script src="/redvoznje/Scripts/jquery.timepicker.min.js"></script>
+     <script src="/redvoznje/Scripts/JSLayout.js"></script>
+    <script src="/redvoznje/Scripts/JSDetalji.js"></script>
+    
+    <script src="/redvoznje/Scripts/css_browser_selector.js" type="text/javascript"></script>
+    
+ 
+
+</head>
+<body>
+
+    <div class="container sr">
+        <div id="left">
+            <header>
+                <h1> RED VOŽNJE </h1>
+               <!-- <img src="/redvoznje/Content/zslogoboja.png" />-->
+                <div class="clearfix">
+                   <!-- <div class="divlang">
+                        <a href="en"><img src="/redvoznje/Content/theme/en.gif" border="0" /></a><a href="sr"><img src="/redvoznje/Content/theme/sr.gif" border="0" /></a>
+                    </div>-->
+                    <div class="divdatum">petak, 09 oktobar 2026</div>
+                    <div class="clearfix"></div>
+                </div>
+            </header>
+
+
+            <dl class="accordion" data-vidljivo="d" data-test="188;">
+                <dt><a href="javascript:void(0);">DIREKTNI VOZOVI </a></dt>
+                <dd>
+                    <label class="stsr">OD:</label> <input type="text" name="stanicaod" id="stanicaod" data-sifra="16808" data-naziv="NOVI SAD" class="stanica" value="NOVI SAD" /><div class="staniceod" data-open="arrow" data-idac="stanicaod">&darr;</div><br />
+                    <div class="zamenast">&darr;&uarr;</div><br />
+                    <label class="stsr">DO:</label> <input type="text" name="stanicado" id="stanicado" data-sifra="16052" data-naziv="BEOGRAD CENTAR" class="stanica" value="BEOGRAD CENTAR" /><div class="stanicedo" data-open="arrow" data-idac="stanicado">&darr;</div><br />
+
+                    <img src="/redvoznje/Content/calendar.png" align="left" class="datumcal" /> <input type="text" name="datum" id="datum" class="datum"  value="13.10.2026" style="width:120px;float:left;" readonly />
+                    <img src="/redvoznje/Content/clock.png" align="left" class="vremelist" /><input type="text" name="vreme" id="vreme" class="vreme" value="0000" style="width: 50px; float: left;" />
+
+                    <div class="clearfix"><button class="btndirektni">TRAZI</button></div>
+                </dd>
+
+                <dt><a href="javascript:void(0);">STANIČNI RED VOŽNJE </a></dt>
+                <dd>
+                    <label>Stanica:</label> <br /><input type="text" name="stanica" id="stanica" class="stanica" data-sifra="" value="" data-naziv="" style="width:228px;" /><div class="stanice" data-open="arrow" data-idac="stanica">&darr;</div><br />
+                    <img src="/redvoznje/Content/calendar.png" align="left" class="datumcals" /> <input type="text" name="datums" id="datums" class="datum" value="13.10.2026" style="width:120px;float:left;" readonly />
+                    <img src="/redvoznje/Content/clock.png" align="left" class="vremelists" /><input type="text" name="vremes" id="vremes" class="vreme" value="0000" style="width: 50px; float: left;" />
+                    <br />
+                    <label style="display: block; clear: both;">Izaberite polazak ili dolazak:</label>
+                    <div id="poldol">
+                        <input type="radio" id="polazak" name="poldol" checked="checked" value="polazak"><label for="polazak">Polazak</label>
+                        <input type="radio" id="dolazak" name="poldol" value="dolazak"><label for="dolazak">Dolazak</label>
+                    </div>
+                    <!-- <label style="display: block; clear: both;">Izaberite vrstu voza:</label>-->
+                    <div id="voz">
+                        <!--<input type="radio" id="svi" name="voz" checked="checked" value="999"><label for="svi">SVI VOZOVI</label>
+                        <input type="radio" id="beovoz" name="voz" value="0"><label for="beovoz">BEOVOZ</label>
+                        <input type="radio" id="bgvoz" name="voz" value="5"><label for="bgvoz">BG:VOZ</label>-->
+                    </div>
+
+
+                    <div class="clearfix"><button class="btnstanicni">TRAZI</button></div>
+                </dd>
+                <dt>
+                    <a href="https://www.srbvoz.rs/wp-content/redvoznje/rv_bg_voza_za_2025.pdf" target="_blank">
+                        RED VOŽNJE BG VOZA<br/>
+                    </a>
+                </dt>
+				  <!-- <dt><a href="https://www.srbvoz.rs/nostalgija/" target="_blank">RED VOŽNJE VOZA "NOSTALGIJA"<br/>
+(Šarganska osmica, Mokra Gora) </a></dt> -->
+                <dt><a href="/redvoznje/kontakt/sr">KONTAKT </a></dt>
+                <dt><a href="/redvoznje/info/sr">UPUTSTVO I INFORMACIJE </a></dt>
+
+                <dt class="lastdt"></dt>
+               
+            </dl>
+			
+			<div class="linkovi" > 
+            <a href="https://srbijavoz.rs/posebne-ponude/" target="_blank">
+				<img src="/redvoznje/Content/posebneponude.JPG" title="Posebne ponude" alt="Posebne ponude" border="0" style="max-width:296px;"   />
+			</a>
+            <!-- <a href="https://www.srbvoz.rs/romantika/" target="_blank">
+				<img src="/redvoznje/Content/img/romantika.jpg" border="0"   />
+			</a> -->
+            <!-- <a href="https://www.srbvoz.rs/nostalgija/" target="_blank">
+				<img src="/redvoznje/Content/img/nostalgija.jpg" border="0"  />
+			</a> -->
+<!-- <a href="https://www.srbvoz.rs/plavi-voz/" target="_blank">
+				<img src="https://www.srbvoz.rs/wp-content/uploads/2019/10/DSC06133-500x280.jpg" border="0" width="150"   />
+			</a> -->
+			<!-- <a href="http://www.srbrail.rs/red_voznje1/kursnak/index.htm" target="_blank">
+				<img src="/redvoznje/Content/img/kursnakola.png" border="0"  />
+			</a>-->
+			<a href="https://www.srbvoz.rs/red-voznje-kurir/" target="_blank">
+				<img src="/redvoznje/Content/rvpdf.jpg" border="0"  />
+			</a>
+            <!--<a href="https://market.android.com/details?id=zs.redvoznje" target="_blank">
+				<img src="/redvoznje/Content/img/android.png" title="Android - Red Vožnje" alt="Android - Red Vožnje" border="0"   />
+			</a>-->
+            
+        </div>
+		 <p style="color: #ffffff;padding:10px;">Podaci o redu voznje: <br/><b>"Infrastruktura Železnice Srbije" a.d.</b><br/><br/>
+			 Web aplikacija reda vožnje:<br/><b> "Srbija Voz" a.d</b></p>
+       
+             </div>
+			 
+        <div id="right">
+            
+<div id="detalji" >
+    <div class="close"> POVRATAK NA REZULTATE </div>
+    <div class="detalji"></div>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        var mDetalji = new Detalji('sr',"https://w3.srbvoz.rs/redvoznje/");
+    });
+
+</script>
+
+
+
+
+<div class="backbtn"><a href="/redvoznje/sr">Naslovna strana</a></div>
+<div id="rezultati" style=" overflow:hidden;float:left;">
+    <h2>Lista vozova od stanice: <span>NOVI SAD</span> do stanice: <span>BEOGRAD CENTAR</span></h2>
+    <h3>Vremena kašnjenja nisu ažurirana u svakom momentu, molimo vas da se za detaljnije informacije obratite Call centru na 011 360 28 99</h3>
+           <h2 style="color:#cc1111;">Nema vozova za traženu relaciju!</h2>
+</div>
+
+
+
+        </div>
+		
+        <script type="text/javascript">
+    $(document).ready(function () {
+
+        var mSRlayOut = new LayOut();
+
+        mSRlayOut.mDomainName = 'https://w3.srbvoz.rs/redvoznje/';
+        mSRlayOut.mvidljiviAccord = 'd';
+        mSRlayOut.mlang = 'sr';
+        mSRlayOut.mdatumm = '13.10.2026';
+        mSRlayOut.mvremem = '0000';
+
+        //DRV:
+        mSRlayOut.mstanicaod = '16808';
+        mSRlayOut.mstanicado = '16052';
+        mSRlayOut.mnazivstod = 'NOVI SAD';
+        mSRlayOut.mnazivstdo = 'BEOGRAD CENTAR';
+        mSRlayOut.mstnazivod = 'NOVI SAD';
+        mSRlayOut.mstnazivdo = 'BEOGRAD CENTAR';
+
+        //SRV:
+        mSRlayOut.mstanica = '';
+        mSRlayOut.mnazivst = '';
+        mSRlayOut.mstnaziv = '';
+        mSRlayOut.mvoz = '999';
+        mSRlayOut.poldol = '';
+
+        mSRlayOut.fsetujPolDol('');
+        mSRlayOut.fsetujVoz('999');
+
+        //
+        mSRlayOut.fListaStanica("#stanicaod", "https://w3.srbvoz.rs/redvoznje/");
+        mSRlayOut.fListaStanica("#stanicado", "https://w3.srbvoz.rs/redvoznje/");
+        mSRlayOut.fListaStanica("#stanica",   "https://w3.srbvoz.rs/redvoznje/");
+        //mSRlayOut.jsfListaStanica("#stanicaod", "http://w3.srbvoz.rs"); ovo je samo za mustru
+    });
+        </script>
+    </div>
+    
+
+</body>
+</html>
