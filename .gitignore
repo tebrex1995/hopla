@@ -1,0 +1,45 @@
+# Secrets: never committed
+.env
+.env.*
+!.env.example
+
+# Private planning docs: a separate private repo (hopla-private), checked out here
+docs/
+
+# Raw recon captures from source sites: never committed (only scrubbed, trimmed fixtures go in tests/)
+recon/
+
+# Local agent tooling (Claude Code, Ruflo, AQE): not part of Hopla
+.claude/
+.claude-flow/
+.agents/
+.swarm/
+.agentic-qe/
+.mcp.json
+CLAUDE.md
+CLAUDE.md.backup
+ruvector.db
+
+# Local databases and data
+*.db
+*.sqlite
+*.sqlite3
+local-data/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
