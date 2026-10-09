@@ -1,0 +1,40 @@
+{
+  "source": "srbijavoz",
+  "case": "weekday",
+  "origin": "recon",
+  "query": {
+    "url": "https://w3.srbvoz.rs/redvoznje//direktni/TPS%20NOVI%20SAD/24402/BEOGRAD%20CENTAR/16052/13.10.2026/0000/sr",
+    "method": "GET",
+    "from_id": 24402,
+    "to_id": 16052,
+    "date": "2026-10-13"
+  },
+  "captured_at": "2026-10-09T11:14:28Z",
+  "http_status": 200,
+  "content_type": "text/html; charset=utf-8",
+  "headers": {
+    "cache-control": "private"
+  },
+  "raw_sha": "69cd07cbdc38fbda6dace6a679d70ff1fa1e9cbf08f3f29ed1700200af387bc6",
+  "trimmed": {
+    "unit": "train",
+    "kept": 5,
+    "of": 37,
+    "kept_ids": [
+      "32401",
+      "12741",
+      "12641",
+      "12541",
+      "12745"
+    ],
+    "span": "div#rezultati"
+  },
+  "fingerprint": {
+    "container": "<div id=\"rezultati\"",
+    "rows": "<table cellpadding=\"2\" cellspacing=\"0\" class=\"tabela\">"
+  },
+  "scrubbed": true,
+  "scrub": [],
+  "notes": "Normal weekday after the 2026-10-12 timetable change. 5 trains keep all 4 categories (REGIO VOZ, REGIO EXPRES, INTER REGIO VOZ with a leading space in its title, INTER CITY), running-day notes, and room for the bad-rows rule (04 §2.3): a parser test that corrupts 1 of the 5 rows stays at 20% (Valid, one warning); 2 of 5 is 40% (Invalid).",
+  "body_sha256": "4bb61a2ccf0f79d248883f1c734113a3d45ddf122d2ca8bedc9597506d356f74"
+}

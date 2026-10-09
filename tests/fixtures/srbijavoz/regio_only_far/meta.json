@@ -1,0 +1,37 @@
+{
+  "source": "srbijavoz",
+  "case": "regio_only_far",
+  "origin": "recon",
+  "query": {
+    "url": "https://w3.srbvoz.rs/redvoznje//direktni/TPS%20NOVI%20SAD/24402/BEOGRAD%20CENTAR/16052/12.12.2026/0000/sr",
+    "method": "GET",
+    "from_id": 24402,
+    "to_id": 16052,
+    "date": "2026-12-12"
+  },
+  "captured_at": "2026-10-09T12:52:14Z",
+  "http_status": 200,
+  "content_type": "text/html; charset=utf-8",
+  "headers": {
+    "cache-control": "private"
+  },
+  "raw_sha": "4cc9ff7bc6dd0b5e41e55278bc7509801242f26d1fc8343abb80d813474367e6",
+  "trimmed": {
+    "unit": "train",
+    "kept": 2,
+    "of": 17,
+    "kept_ids": [
+      "12741",
+      "32403"
+    ],
+    "span": "div#rezultati"
+  },
+  "fingerprint": {
+    "container": "<div id=\"rezultati\"",
+    "rows": "<table cellpadding=\"2\" cellspacing=\"0\" class=\"tabela\">"
+  },
+  "scrubbed": true,
+  "scrub": [],
+  "notes": "Last day of the 2026 annual timetable: only REGIO VOZ and REGIO EXPRES (17 trains); every INTER CITY / INTER REGIO train is missing, so the data horizon differs by category.",
+  "body_sha256": "8c55835c92f8bb113a5316b46d76a5d095cb2d517303b57f298c53726be1bb4e"
+}

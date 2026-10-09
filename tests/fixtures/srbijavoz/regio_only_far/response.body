@@ -1,0 +1,191 @@
+<div id="rezultati" style=" overflow:hidden;float:left;">
+    <h2>Lista vozova od stanice: <span>TPS NOVI SAD</span> do stanice: <span>BEOGRAD CENTAR</span></h2>
+    <h3>Vremena kašnjenja nisu ažurirana u svakom momentu, molimo vas da se za detaljnije informacije obratite Call centru na 011 360 28 99</h3>
+        <table cellpadding="2" cellspacing="0" class="tabela">
+            <tr class="tsmall">
+                <th>
+                    Broj voza
+                </th>
+                <th>
+                    Polazak
+                </th>
+                <th>
+                    Datum polaska
+                </th>
+                <th>
+                    Dolazak
+                </th>
+                <th>
+                    Datum dolaska
+                </th>
+                <th>
+                    Kasni
+                </th>
+                <th >
+                    Putuje
+                </th>
+                <th >
+                    Rang
+                </th>
+                <th >
+                    Ponuda
+                </th>
+                <th >
+                    Napomena
+                </th>
+
+                <th ></th>
+            </tr>
+           
+
+    <tr class="tsmall">
+        <td>
+            12741
+        </td>
+        <td>
+            <b>05:10</b>
+        </td>
+        <td>
+            12.12.2026
+        </td>
+        <td>
+            <b> 06:10</b>
+        </td>
+        <td>
+            12.12.2026
+        </td>
+        <td>
+            <span class="kasni">     </span>
+        </td>
+        <td>
+            01:00
+        </td>
+        <td>
+
+
+<img src="https://w3.srbvoz.rs/redvoznje/Content/img/REx.jpg" title="REGIO EXPRES">
+  
+        </td>
+
+        <td width="170">
+
+            <img src="https://w3.srbvoz.rs/redvoznje//Content/img/PrviRazred.jpg" title="Prvi razred"><img src="https://w3.srbvoz.rs/redvoznje//Content/img/DrugiRazred.jpg" title="Drugi razred"><a href="http://www.srbvoz.rs/prevozbicikala.html" target="blank"><img src="https://w3.srbvoz.rs/redvoznje//Content/img/Bicikl.jpg" title="Bicikla - Ograničen broj mesta" border="0"></a><img src="https://w3.srbvoz.rs/redvoznje//Content/img/MogucaRezervacija.jpg" title="Moguća rezervacija">
+        </td>
+
+        <td>
+            <span class="napomena">                                                                                                    </span>
+        </td>
+        <td>
+            <button class="dajdetalje"
+                    data-idvoza="1111 "
+                    data-brojvoza="12741"
+                    data-datum="12-12-2026"
+                    data-stod="24402"
+                    data-stdo="16052"
+                    data-napomena="                                                                                                    ">
+                Detaljnije
+            </button>
+        </td>
+
+    </tr>
+    <tr class="tbig">
+        <td>
+            Voz broj: 12741<br/>
+            Polazak: <b>05:10</b>  12.12.2026 <br/>
+            Dolazak: <b>06:10</b> 12.12.2026 <br />
+            <span class="kasni">Kasni:      </span> <br />
+            Putuje: 01:00<br/>
+       
+             <img src="https://w3.srbvoz.rs/redvoznje/Content/img/REx.jpg" title="REGIO EXPRES">  <img src="https://w3.srbvoz.rs/redvoznje//Content/img/PrviRazred.jpg" title="Prvi razred"><img src="https://w3.srbvoz.rs/redvoznje//Content/img/DrugiRazred.jpg" title="Drugi razred"><a href="http://www.srbvoz.rs/prevozbicikala.html" target="blank"><img src="https://w3.srbvoz.rs/redvoznje//Content/img/Bicikl.jpg" title="Bicikla - Ograničen broj mesta" border="0"></a><img src="https://w3.srbvoz.rs/redvoznje//Content/img/MogucaRezervacija.jpg" title="Moguća rezervacija"> <br />
+       
+            Napomena: <span class="napomena">                                                                                                    </span><br />
+        
+            <button class="dajdetalje" style="float:right;"
+                    data-idvoza="1111 "
+                    data-brojvoza="12741"
+                    data-datum="12-12-2026"
+                    data-stod="24402"
+                    data-stdo="16052"
+                    data-napomena="                                                                                                    ">
+                Detaljnije
+            </button>
+        </td>
+       
+    </tr>
+    <tr class="tsmall">
+        <td>
+            32403
+        </td>
+        <td>
+            <b>07:10</b>
+        </td>
+        <td>
+            12.12.2026
+        </td>
+        <td>
+            <b> 08:19</b>
+        </td>
+        <td>
+            12.12.2026
+        </td>
+        <td>
+            <span class="kasni">     </span>
+        </td>
+        <td>
+            01:09
+        </td>
+        <td>
+
+
+<img src="https://w3.srbvoz.rs/redvoznje/Content/img/RE.jpg" title="REGIO VOZ">
+  
+        </td>
+
+        <td width="170">
+
+            <img src="https://w3.srbvoz.rs/redvoznje//Content/img/PrviRazred.jpg" title="Prvi razred"><img src="https://w3.srbvoz.rs/redvoznje//Content/img/DrugiRazred.jpg" title="Drugi razred"><a href="http://www.srbvoz.rs/prevozbicikala.html" target="blank"><img src="https://w3.srbvoz.rs/redvoznje//Content/img/Bicikl.jpg" title="Bicikla - Ograničen broj mesta" border="0"></a>
+        </td>
+
+        <td>
+            <span class="napomena">                                                                                                    </span>
+        </td>
+        <td>
+            <button class="dajdetalje"
+                    data-idvoza="1133 "
+                    data-brojvoza="32403"
+                    data-datum="12-12-2026"
+                    data-stod="24402"
+                    data-stdo="16052"
+                    data-napomena="                                                                                                    ">
+                Detaljnije
+            </button>
+        </td>
+
+    </tr>
+    <tr class="tbig">
+        <td>
+            Voz broj: 32403<br/>
+            Polazak: <b>07:10</b>  12.12.2026 <br/>
+            Dolazak: <b>08:19</b> 12.12.2026 <br />
+            <span class="kasni">Kasni:      </span> <br />
+            Putuje: 01:09<br/>
+       
+             <img src="https://w3.srbvoz.rs/redvoznje/Content/img/RE.jpg" title="REGIO VOZ">  <img src="https://w3.srbvoz.rs/redvoznje//Content/img/PrviRazred.jpg" title="Prvi razred"><img src="https://w3.srbvoz.rs/redvoznje//Content/img/DrugiRazred.jpg" title="Drugi razred"><a href="http://www.srbvoz.rs/prevozbicikala.html" target="blank"><img src="https://w3.srbvoz.rs/redvoznje//Content/img/Bicikl.jpg" title="Bicikla - Ograničen broj mesta" border="0"></a> <br />
+       
+            Napomena: <span class="napomena">                                                                                                    </span><br />
+        
+            <button class="dajdetalje" style="float:right;"
+                    data-idvoza="1133 "
+                    data-brojvoza="32403"
+                    data-datum="12-12-2026"
+                    data-stod="24402"
+                    data-stdo="16052"
+                    data-napomena="                                                                                                    ">
+                Detaljnije
+            </button>
+        </td>
+       
+    </tr>
+
+    </table>
+</div>
