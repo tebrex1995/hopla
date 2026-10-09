@@ -1,0 +1,37 @@
+{
+  "source": "srbijavoz",
+  "case": "weekend",
+  "origin": "recon",
+  "query": {
+    "url": "https://w3.srbvoz.rs/redvoznje//direktni/TPS%20NOVI%20SAD/24402/BEOGRAD%20CENTAR/16052/17.10.2026/0000/sr",
+    "method": "GET",
+    "from_id": 24402,
+    "to_id": 16052,
+    "date": "2026-10-17"
+  },
+  "captured_at": "2026-10-09T12:50:08Z",
+  "http_status": 200,
+  "content_type": "text/html; charset=utf-8",
+  "headers": {
+    "cache-control": "private"
+  },
+  "raw_sha": "886c57b4887fa76ef87b4b4f49defbc959f1947a0c9daf9ece19ed03b087145f",
+  "trimmed": {
+    "unit": "train",
+    "kept": 2,
+    "of": 33,
+    "kept_ids": [
+      "12741",
+      "12541"
+    ],
+    "span": "div#rezultati"
+  },
+  "fingerprint": {
+    "container": "<div id=\"rezultati\"",
+    "rows": "<table cellpadding=\"2\" cellspacing=\"0\" class=\"tabela\">"
+  },
+  "scrubbed": true,
+  "scrub": [],
+  "notes": "Saturday: 33 trains; the weekday-only trains (12641, 12745, 12747, 32401) are absent.",
+  "body_sha256": "6457ee3acf5f48dbedd9d4eb943ef66fb56aed6cad96f71302dd13287f2a5bc7"
+}
