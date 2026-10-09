@@ -6,6 +6,8 @@ readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.14"
+# The name `hopla` on PyPI is an unrelated project: install from this repo, never from PyPI.
+classifiers = ["Private :: Do Not Upload"]
 dependencies = [
     "anyio>=4.15.1",
     "boto3>=1.43.110",
@@ -39,13 +41,19 @@ packages = ["src/hopla"]
 [tool.uv]
 # CI installs a uv from this range too (setup-uv reads it): same uv minor locally and in CI.
 required-version = ">=0.12.23,<0.13"
-# Build the project with an exact backend everywhere (build deps aren't in uv.lock).
-build-constraint-dependencies = ["hatchling==1.32.4"]
+# The build environment isn't in uv.lock, so pin all of it: hatchling and its dependencies.
+build-constraint-dependencies = [
+    "hatchling==1.32.4",
+    "packaging==26.3",
+    "pathspec==1.1.1",
+    "pluggy==1.6.0",
+    "tomlkit==0.15.1",
+    "trove-classifiers==2026.9.21.13",
+]
 
 [tool.ruff]
 line-length = 100
 # No target-version: ruff infers it from requires-python (one version source, ADR-0001).
-extend-exclude = [".claude", ".claude-flow", ".agents", ".agentic-qe", ".swarm"]
 
 [tool.ruff.format]
 line-ending = "lf"
@@ -122,7 +130,6 @@ extra_checks = true
 # inside an override applies to every module.
 module = ["hopla.core", "hopla.core.*"]
 disallow_any_generics = true
-disallow_incomplete_defs = true
 disallow_untyped_calls = true
 disallow_untyped_decorators = true
 disallow_subclassing_any = true

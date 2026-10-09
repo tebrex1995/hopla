@@ -27,13 +27,14 @@ def _load(path: Path) -> dict[Any, Any]:
     return workflow
 
 
+def _steps(workflow: dict[Any, Any]) -> list[dict[str, Any]]:
+    return [step for job in workflow["jobs"].values() for step in job.get("steps", [])]
+
+
 def _uses(workflow: dict[Any, Any]) -> list[str]:
-    """Every `uses:` of the workflow: steps and reusable-workflow jobs."""
-    uses = []
-    for job in workflow["jobs"].values():
-        uses += [job["uses"]] if "uses" in job else []
-        uses += [step["uses"] for step in job.get("steps", []) if "uses" in step]
-    return uses
+    """Every `uses:` of the workflow: reusable-workflow jobs and steps."""
+    jobs = [job["uses"] for job in workflow["jobs"].values() if "uses" in job]
+    return jobs + [step["uses"] for step in _steps(workflow) if "uses" in step]
 
 
 def test_ci_workflow_is_found() -> None:
@@ -71,6 +72,14 @@ def test_no_trigger_runs_fork_code_with_secrets(path: Path) -> None:
 
 
 @pytest.mark.parametrize("path", WORKFLOWS, ids=lambda p: p.name)
+def test_no_expression_is_pasted_into_a_script(path: Path) -> None:
+    # `${{ }}` in `run:` is pasted into the shell before it runs (script injection);
+    # values reach scripts through `env:` instead.
+    scripts = [step["run"] for step in _steps(_load(path)) if "run" in step]
+    assert [script for script in scripts if "${{" in script] == []
+
+
+@pytest.mark.parametrize("path", WORKFLOWS, ids=lambda p: p.name)
 def test_every_job_has_a_timeout(path: Path) -> None:
     jobs = _load(path)["jobs"]
     # A reusable-workflow job sets its timeouts in the called workflow.
@@ -80,8 +89,9 @@ def test_every_job_has_a_timeout(path: Path) -> None:
 
 @pytest.mark.parametrize("path", WORKFLOWS, ids=lambda p: p.name)
 def test_checkout_does_not_keep_the_token(path: Path) -> None:
-    steps = [step for job in _load(path)["jobs"].values() for step in job.get("steps", [])]
-    checkouts = [s for s in steps if s.get("uses", "").startswith("actions/checkout@")]
+    checkouts = [
+        s for s in _steps(_load(path)) if s.get("uses", "").startswith("actions/checkout@")
+    ]
     assert [s for s in checkouts if s.get("with", {}).get("persist-credentials") is not False] == []
 
 

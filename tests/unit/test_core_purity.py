@@ -11,7 +11,9 @@ from pathlib import Path
 
 import pytest
 
-CORE_DIR = Path(__file__).resolve().parents[2] / "src" / "hopla" / "core"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SRC_DIR = REPO_ROOT / "src"
+CORE_DIR = SRC_DIR / "hopla" / "core"
 
 # Stdlib modules with no I/O, clocks or randomness. Add one here when core needs it.
 # zoneinfo reads the bundled tz database, which core needs for Europe/Belgrade times.
@@ -47,7 +49,7 @@ PURE_STDLIB = frozenset(
         "typing",
         "unicodedata",
         "urllib.parse",
-        "uuid",  # uuid5 only: ruff bans the random and clock-based uuid functions
+        "uuid",  # content-derived ids only (uuid3/uuid5, UUID); ruff bans uuid1/4/6/7/8
         "zoneinfo",
     }
 )
@@ -63,21 +65,21 @@ def _is_allowed(name: str) -> bool:
     return any(name == allowed or name.startswith(f"{allowed}.") for allowed in ALLOWED)
 
 
-def _is_parent_of_allowed(name: str) -> bool:
+def _has_allowed_submodule(name: str) -> bool:
     return any(allowed.startswith(f"{name}.") for allowed in ALLOWED)
 
 
-def _resolve_relative(module: str, is_package: bool, level: int, target: str | None) -> str | None:
-    """The absolute name of `from <level dots><target> import ...`, or None above the root."""
-    parts = module.split(".") if is_package else module.split(".")[:-1]
-    if level - 1 >= len(parts):
+def _resolve_relative(package: str, level: int, target: str | None) -> str | None:
+    """The absolute name of `from <level dots><target> import ...` in `package`, or None."""
+    parts = package.split(".")
+    if level > len(parts):
         return None
-    base = parts[: len(parts) - (level - 1)]
+    base = parts[: len(parts) - level + 1]
     return ".".join([*base, target] if target else base)
 
 
-def import_violations(source: str, module: str, is_package: bool = False) -> list[str]:
-    """Every forbidden import and banned builtin name in `source` (the code of `module`)."""
+def import_violations(source: str, package: str) -> list[str]:
+    """Every forbidden import and banned builtin name in `source`, a module of `package`."""
     violations = []
     for node in ast.walk(ast.parse(source)):
         if isinstance(node, ast.Import):
@@ -85,10 +87,10 @@ def import_violations(source: str, module: str, is_package: bool = False) -> lis
         elif isinstance(node, ast.ImportFrom):
             target = node.module
             if node.level:
-                target = _resolve_relative(module, is_package, node.level, node.module)
+                target = _resolve_relative(package, node.level, node.module)
             if target is None:
                 violations.append("." * node.level + (node.module or ""))
-            elif _is_parent_of_allowed(target):
+            elif _has_allowed_submodule(target):
                 # `from urllib import parse` may name an allowed submodule of a package that isn't.
                 violations += [
                     f"{target}.{alias.name}"
@@ -108,16 +110,15 @@ def test_core_imports_only_pure_modules() -> None:
 
     found = {}
     for path in files:
-        relative = path.relative_to(CORE_DIR.parents[1]).with_suffix("")
-        is_package = relative.name == "__init__"
-        module = ".".join(relative.parts[:-1] if is_package else relative.parts)
-        if violations := import_violations(path.read_text(encoding="utf-8"), module, is_package):
-            found[str(path.relative_to(CORE_DIR.parents[2]))] = violations
+        # Relative imports resolve from the file's folder, for __init__.py and modules alike.
+        package = ".".join(path.relative_to(SRC_DIR).parent.parts)
+        if violations := import_violations(path.read_text(encoding="utf-8"), package):
+            found[str(path.relative_to(REPO_ROOT))] = violations
 
     assert found == {}
 
 
-# The checker itself, against code core may contain one day (module: hopla.core.engine).
+# The checker itself, against code core may contain one day (a module of hopla.core).
 @pytest.mark.parametrize(
     ("source", "expected"),
     [
@@ -147,7 +148,7 @@ def test_core_imports_only_pure_modules() -> None:
     ],
 )
 def test_checker_rejects(source: str, expected: list[str]) -> None:
-    assert import_violations(source, "hopla.core.engine") == expected
+    assert import_violations(source, "hopla.core") == expected
 
 
 @pytest.mark.parametrize(
@@ -166,10 +167,4 @@ def test_checker_rejects(source: str, expected: list[str]) -> None:
     ],
 )
 def test_checker_allows(source: str) -> None:
-    assert import_violations(source, "hopla.core.engine") == []
-
-
-def test_relative_import_in_a_package_init_resolves_from_the_package() -> None:
-    # In hopla/core/__init__.py, `from . import x` is hopla.core.x, `from .. import x` is hopla.x.
-    assert import_violations("from . import rules", "hopla.core", is_package=True) == []
-    assert import_violations("from .. import db", "hopla.core", is_package=True) == ["hopla.db"]
+    assert import_violations(source, "hopla.core") == []

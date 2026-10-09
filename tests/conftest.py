@@ -20,13 +20,17 @@ LAYER_MARKERS = {
 
 @pytest.hookimpl(tryfirst=True)  # mark before `-m` deselects
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    """Mark every test with its layer, and refuse tests that have none.
+    """Mark every test with its layer; refuse tests with no layer or with the network on.
 
     CI selects tests by marker, so a test outside the layer directories would be
     deselected silently and never run anywhere.
     """
     layers = set(LAYER_MARKERS.values())
     for item in items:
+        # pytest-socket's opt-outs would let a test reach a source site (NFR-060).
+        fixtures = getattr(item, "fixturenames", ())  # only function items have fixtures
+        if item.get_closest_marker("enable_socket") or "socket_enabled" in fixtures:
+            raise pytest.UsageError(f"{item.nodeid}: tests may not turn the network guard off")
         if not item.path.is_relative_to(TESTS_DIR):
             continue  # collected from elsewhere (e.g. doctests in src/): not a suite test
         top = item.path.relative_to(TESTS_DIR).parts[0]

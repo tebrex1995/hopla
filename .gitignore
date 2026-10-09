@@ -2,6 +2,15 @@
 .env
 .env.*
 !.env.example
+.envrc
+.netrc
+*.pem
+*.key
+*.p12
+*.pfx
+cookies.txt
+# Browser captures carry cookies and session tokens; keep them in recon/ only
+*.har
 
 # Private planning docs: a separate private repo (hopla-private), checked out here
 docs/

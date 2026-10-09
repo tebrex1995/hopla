@@ -10,11 +10,11 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-# Job ids are the required status checks (04 §7): lint, types, test.
-# Renaming one silently blocks every PR until branch protection is updated.
+# Required status checks (04 §7): lint, types, test. A check is named after the job's `name:`,
+# else its id; renaming one blocks every PR until branch protection is updated.
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -24,19 +24,30 @@ jobs:
         with:
           fetch-depth: 0 # gitleaks scans the pushed or PR commit range
           persist-credentials: false
+      # A checksum-verified binary with no token in its environment. On a PR the range ends at
+      # the merge commit, so merges and every commit of the PR are scanned.
       - name: gitleaks
-        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
-        # Public repo: listing PR commits needs no extra token scope. If the repo ever goes
-        # private, add `pull-requests: read` to this job.
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_ENABLE_COMMENTS: false
-          GITLEAKS_VERSION: 8.30.1 # same rules as local; the action's default is older
+          GITLEAKS_VERSION: 8.30.1 # same rules as local
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.sha }}
+        run: |
+          cd "$RUNNER_TEMP"
+          curl -sSfL -o gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+          ./gitleaks git --redact --no-banner --log-opts="${BASE}..${HEAD}" "$GITHUB_WORKSPACE"
+      # An exact uv, checked against the release checksum (linux x86_64). Bump with required-version.
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
+          version: "0.12.23"
+          checksum: 9167d72b3319674b6303c4cbe071854bba13ebdf3d76b1a7cbdc175471fb66d6
           enable-cache: true
           cache-dependency-glob: uv.lock
           cache-python: true
+          # Only this job saves the cache, and only from main: PR code never writes it.
+          save-cache: ${{ github.event_name == 'push' }}
       - run: uv sync --locked
       - run: uv run --no-sync ruff check .
       - run: uv run --no-sync ruff format --check .
@@ -50,9 +61,12 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
+          version: "0.12.23"
+          checksum: 9167d72b3319674b6303c4cbe071854bba13ebdf3d76b1a7cbdc175471fb66d6
           enable-cache: true
           cache-dependency-glob: uv.lock
           cache-python: true
+          save-cache: false
       - run: uv sync --locked
       - run: uv run --no-sync mypy
 
@@ -65,9 +79,12 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
+          version: "0.12.23"
+          checksum: 9167d72b3319674b6303c4cbe071854bba13ebdf3d76b1a7cbdc175471fb66d6
           enable-cache: true
           cache-dependency-glob: uv.lock
           cache-python: true
+          save-cache: false
       - run: uv sync --locked
       - run: uv run --no-sync pytest -m "unit or contract"
 
@@ -84,9 +101,12 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
+          version: "0.12.23"
+          checksum: 9167d72b3319674b6303c4cbe071854bba13ebdf3d76b1a7cbdc175471fb66d6
           enable-cache: true
           cache-dependency-glob: uv.lock
           cache-python: true
+          save-cache: false
       # A real (non-editable) install, as users get it: catches files missing from the wheel.
       # --reinstall-package: never reuse a cached wheel of hopla (a stale one would pass falsely).
       - run: uv sync --locked --no-dev --no-editable --reinstall-package hopla
@@ -94,6 +114,9 @@ jobs:
       - run: .venv/bin/hopla --help
       - run: .venv/bin/hopla --version
       - name: import every module without dev tools
-        run: >-
-          .venv/bin/python -c "import importlib, pkgutil, hopla;
-          [importlib.import_module(m.name) for m in pkgutil.walk_packages(hopla.__path__, 'hopla.')]"
+        run: |
+          .venv/bin/python - <<'EOF'
+          import importlib, pkgutil, hopla
+          for mod in pkgutil.walk_packages(hopla.__path__, "hopla."):
+              importlib.import_module(mod.name)
+          EOF

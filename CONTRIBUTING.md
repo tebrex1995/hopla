@@ -2,6 +2,8 @@
 
 ## Commands
 
+Needs uv 0.12.x (pinned in `pyproject.toml` under `[tool.uv]`); uv installs Python 3.14 from `.python-version`.
+
 ```bash
 uv sync --locked                    # install exactly what uv.lock pins
 uv run pytest -m "unit or contract" # what CI runs (tests can connect to loopback only)
