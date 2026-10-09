@@ -1,0 +1,141 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# An exact uv for every job, checked against its release checksum (linux x86_64). Keep it inside
+# [tool.uv] required-version; bump both by hand (Dependabot doesn't). No UV_ prefix: uv reads those.
+env:
+  PINNED_UV_VERSION: "0.12.23"
+  PINNED_UV_SHA256: 9167d72b3319674b6303c4cbe071854bba13ebdf3d76b1a7cbdc175471fb66d6
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Required status checks (04 §7): lint, types, test. A check is named after the job's `name:`,
+# else its id; renaming one blocks every PR until branch protection is updated.
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # gitleaks scans the pushed or PR commit range
+          persist-credentials: false
+      # A checksum-verified binary with no token in its environment. Every commit in the range
+      # and every merge's own changes are scanned; an unknown base (a first push or a force-push)
+      # scans the whole history instead of nothing. The default rules come from an out-of-tree
+      # config and inline `gitleaks:allow` is ignored, so no file in the repo can mute the scan.
+      - name: gitleaks
+        env:
+          GITLEAKS_VERSION: 8.30.1 # same rules as local
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.sha }}
+        run: |
+          cd "$RUNNER_TEMP"
+          curl -sSfL -o gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+          printf '[extend]\nuseDefault = true\n' > gitleaks.toml
+          # A shallow clone would make a known base look unknown and scan a single commit.
+          if [ "$(git -C "$GITHUB_WORKSPACE" rev-parse --is-shallow-repository)" != false ]; then
+            echo "shallow clone: gitleaks would under-scan" >&2
+            exit 1
+          fi
+          if git -C "$GITHUB_WORKSPACE" cat-file -e "${BASE}^{commit}" 2>/dev/null; then
+            RANGE="${BASE}..${HEAD}"
+          else
+            RANGE="${HEAD}"
+          fi
+          ./gitleaks git --redact --verbose --no-banner --ignore-gitleaks-allow --config gitleaks.toml \
+            --log-opts="--diff-merges=first-parent ${RANGE}" "$GITHUB_WORKSPACE"
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: ${{ env.PINNED_UV_VERSION }}
+          checksum: ${{ env.PINNED_UV_SHA256 }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+          cache-python: true
+          # Only this job saves the cache, and only from main: PR code never writes it.
+          save-cache: ${{ github.event_name == 'push' }}
+      - run: uv sync --locked
+      - run: uv run --no-sync ruff check .
+      - run: uv run --no-sync ruff format --check .
+
+  types:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: ${{ env.PINNED_UV_VERSION }}
+          checksum: ${{ env.PINNED_UV_SHA256 }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+          cache-python: true
+          save-cache: false
+      - run: uv sync --locked
+      - run: uv run --no-sync mypy
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: ${{ env.PINNED_UV_VERSION }}
+          checksum: ${{ env.PINNED_UV_SHA256 }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+          cache-python: true
+          save-cache: false
+      - run: uv sync --locked
+      - run: uv run --no-sync pytest -m "unit or contract"
+
+  # The install users get: no dev tools. Catches a dev-only import in src/ and a
+  # broken console-script target. Not a required check until T-R0-06.
+  smoke:
+    name: install-set smoke
+    needs: [lint, types, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: ${{ env.PINNED_UV_VERSION }}
+          checksum: ${{ env.PINNED_UV_SHA256 }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+          cache-python: true
+          save-cache: false
+      # A real (non-editable) install, as users get it: catches files missing from the wheel.
+      # --reinstall-package: never reuse a cached wheel of hopla (a stale one would pass falsely).
+      - run: uv sync --locked --no-dev --no-editable --reinstall-package hopla
+      # Call the venv directly: a bare `uv run` would re-sync the dev group and hide the bug.
+      - run: .venv/bin/hopla --help
+      - run: .venv/bin/hopla --version
+      - name: import every module without dev tools
+        run: |
+          .venv/bin/python - <<'EOF'
+          import importlib, pkgutil, hopla
+          for mod in pkgutil.walk_packages(hopla.__path__, "hopla."):
+              importlib.import_module(mod.name)
+          EOF

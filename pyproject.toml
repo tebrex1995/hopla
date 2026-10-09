@@ -2,29 +2,169 @@
 name = "hopla"
 version = "0.1.0"
 description = "Serbian train + bus planner with change alerts"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.14"
+# The name `hopla` on PyPI is an unrelated project: install from this repo, never from PyPI.
+classifiers = ["Private :: Do Not Upload"]
 dependencies = [
-    "httpx>=0.27",
-    "fastapi>=0.115",
-    "pydantic>=2.8",
+    "anyio>=4.15.1",
+    "boto3>=1.43.110",
+    "httpx>=0.28.1",
+    "pydantic>=2.14.0",
+    "pydantic-settings>=2.15.0",
+    "pyyaml>=6.0.3",
+    "tzdata>=2026.5",
 ]
+
+[project.scripts]
+hopla = "hopla.pipeline.cli:main"
 
 [dependency-groups]
 dev = [
-    "pytest>=8.3",
-    "ruff>=0.6",
+    "mypy>=2.4.0",
+    "packaging>=26.3",
+    "pytest>=9.1.1",
+    "pytest-socket>=0.8.1",
+    "respx>=0.23.1",
+    "ruff>=0.16.10",
+    "types-pyyaml>=6.0.12.20260906",
 ]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27,<2"]  # PEP 639 license fields need >= 1.27
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/hopla"]
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
+[tool.uv]
+# Local uv range. CI pins an exact uv inside it (PINNED_UV_* in ci.yml); keep the two in step.
+required-version = ">=0.12.23,<0.13"
+# The build environment isn't in uv.lock, so pin all of it: hatchling and its dependencies.
+build-constraint-dependencies = [
+    "hatchling==1.32.4",
+    "packaging==26.3",
+    "pathspec==1.1.1",
+    "pluggy==1.6.0",
+    "tomlkit==0.15.1",
+    "trove-classifiers==2026.9.21.13",
+]
 
 [tool.ruff]
 line-length = 100
-extend-exclude = [".claude", ".claude-flow", ".agents", ".agentic-qe", ".swarm"]
+# No target-version: ruff infers it from requires-python (one version source, ADR-0001).
+
+[tool.ruff.format]
+line-ending = "lf"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "TID"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+# hopla.core is pure: stdlib only, no clocks or randomness (ADR-0001, ADR-0006).
+# This is a direct-import DENYLIST for fast feedback. The real gates are the allowlist
+# test tests/unit/test_core_purity.py and import-linter's transitive contracts (T-R0-30).
+"datetime.datetime.now".msg = "core is pure: inject a Clock"
+"datetime.datetime.utcnow".msg = "core is pure: inject a Clock"
+"datetime.date.today".msg = "core is pure: inject a Clock"
+"datetime.datetime.today".msg = "core is pure: inject a Clock"
+"uuid.uuid1".msg = "core is pure: ids are derived from content"
+"uuid.uuid4".msg = "core is pure: ids are derived from content"
+"uuid.uuid6".msg = "core is pure: ids are derived from content"
+"uuid.uuid7".msg = "core is pure: ids are derived from content"
+"uuid.uuid8".msg = "core is pure: ids are derived from content"
+"time".msg = "core is pure: inject a Clock"
+"os".msg = "core is pure: no environment, files or processes (cfg is passed in)"
+"secrets".msg = "core is pure: no randomness"
+"socket".msg = "core does no I/O"
+"urllib.request".msg = "core does no I/O"
+"sqlite3".msg = "core does no I/O"
+"subprocess".msg = "core does no I/O"
+"ssl".msg = "core does no I/O"
+"http.client".msg = "core does no I/O"
+"asyncio".msg = "core is synchronous (ADR-0001: async shell, sync core)"
+"random".msg = "core is pure: no randomness"
+"pydantic".msg = "core imports the stdlib only (ADR-0001)"
+"pydantic_core".msg = "core imports the stdlib only (ADR-0001)"
+"pydantic_settings".msg = "core imports the stdlib only (ADR-0001)"
+"httpcore".msg = "core imports the stdlib only (ADR-0001)"
+"requests".msg = "core imports the stdlib only (ADR-0001)"
+"botocore".msg = "core imports the stdlib only (ADR-0001)"
+"httpx".msg = "core imports the stdlib only (ADR-0001)"
+"anyio".msg = "core imports the stdlib only (ADR-0001)"
+"boto3".msg = "core imports the stdlib only (ADR-0001)"
+"yaml".msg = "core imports the stdlib only (ADR-0001)"
+"fastapi".msg = "core imports the stdlib only (ADR-0001)"
+"anthropic".msg = "core imports the stdlib only (ADR-0001)"
+"psycopg".msg = "core imports the stdlib only (ADR-0001)"
+"playwright".msg = "core imports the stdlib only (ADR-0001)"
+"hopla.scrapers".msg = "core must not import adapters (ADR-0001)"
+"hopla.pipeline".msg = "core must not import the pipeline (ADR-0001)"
+"hopla.storage".msg = "core must not import storage (ADR-0001)"
+"hopla.db".msg = "core must not import the database layer (ADR-0001)"
+"hopla.api".msg = "core must not import the API (ADR-0001)"
+"hopla.notify".msg = "core must not import notify (02 §2: core <- notify)"
+"hopla.llm".msg = "core must not import llm (02 §2: core <- llm)"
+"hopla.ops".msg = "core must not import ops (02 §2: core <- ops)"
+"hopla.config".msg = "core gets configuration passed in (cfg), never imports it"
+
+[tool.ruff.lint.per-file-ignores]
+# The bans above apply to hopla.core only.
+"!src/hopla/core/**" = ["TID251"]
+
+[tool.mypy]
+files = ["src", "tests"]
+mypy_path = "src"
+explicit_package_bases = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+check_untyped_defs = true
+disallow_untyped_defs = true
+strict_equality = true
+extra_checks = true
+
+[[tool.mypy.overrides]]
+# Strict for the pure core. Flags are listed one by one because `strict = true`
+# inside an override applies to every module.
+module = ["hopla.core", "hopla.core.*"]
+disallow_any_generics = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_subclassing_any = true
+warn_return_any = true
+no_implicit_reexport = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+minversion = "9.0"
+testpaths = ["tests"]
+xfail_strict = true
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    # No test may connect to anything but loopback (NFR-060, 04 §2). --allow-hosts is what
+    # blocks connect(); --disable-socket blocks every socket if the allow-list is ever dropped.
+    "--disable-socket",
+    "--allow-hosts=127.0.0.1,localhost",
+]
+markers = [
+    "unit: fast, pure tests (tests/unit)",
+    "property: Hypothesis property tests (from R0)",
+    "contract: parser tests against recorded fixtures (tests/contract)",
+    "scenario: scenario replays (tests/scenarios)",
+    "integration: needs real Postgres (tests/integration)",
+    "e2e: end-to-end browser tests (tests/e2e)",
+]
+anyio_mode = "auto"  # async tests run on anyio (ADR-0001); backend fixed in tests/conftest.py
+filterwarnings = [
+    "error",
+    # pytest-socket warns before raising its block error; keep the error visible.
+    "ignore::UserWarning:pytest_socket",
+]

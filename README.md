@@ -25,7 +25,7 @@ If you run one of the sources and have a question or a concern, write to **konta
 
 ## Stack
 
-Python 3.12+ with uv, httpx, FastAPI and Postgres. Raw responses are stored before parsing, so they can be re-parsed later. Change detection is a pure, tested function. See `CONTRIBUTING.md` for the development commands.
+Python 3.14 with uv, httpx, FastAPI and Postgres. Raw responses are stored before parsing, so they can be re-parsed later. Change detection is a pure, tested function. See `CONTRIBUTING.md` for the development commands.
 
 ## License
 

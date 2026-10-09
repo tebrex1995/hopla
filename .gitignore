@@ -2,6 +2,18 @@
 .env
 .env.*
 !.env.example
+.envrc
+.netrc
+*.pem
+*.key
+*.p12
+*.pfx
+cookies.txt
+# Browser captures carry cookies and session tokens; keep them in recon/ only
+*.har
+# gitleaks allowlists would mute the CI secret scan; adding one must be a reviewed change here
+.gitleaks.toml
+.gitleaksignore
 
 # Private planning docs: a separate private repo (hopla-private), checked out here
 docs/

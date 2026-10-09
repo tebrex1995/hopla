@@ -1,0 +1,4 @@
+* text=auto eol=lf
+# Recorded source responses must stay byte-exact (ADR-0003 hashes, CRLF parsing).
+tests/fixtures/** -text
+*.gz binary

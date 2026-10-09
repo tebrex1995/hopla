@@ -2,11 +2,15 @@
 
 ## Commands
 
+Needs uv 0.12.23 or a later 0.12.x (`required-version` in `pyproject.toml`); uv installs Python 3.14 from `.python-version`.
+
 ```bash
-uv sync --locked          # install exactly what uv.lock pins
-uv run pytest             # tests (outbound network is blocked in tests)
-uv run ruff check .       # lint
-uv run ruff format .      # format
+uv sync --locked                    # install exactly what uv.lock pins
+uv run pytest -m "unit or contract" # what CI runs (tests can connect to loopback only)
+uv run ruff check .                 # lint (incl. a direct-import denylist for hopla.core)
+uv run ruff format .                # format
+uv run mypy                         # type check (strict for hopla.core)
+uv run hopla --help                 # the command line
 ```
 
 ## Rules
