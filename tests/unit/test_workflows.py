@@ -6,11 +6,13 @@ a reviewer can miss.
 """
 
 import re
+import tomllib
 from pathlib import Path
 from typing import Any
 
 import pytest
 import yaml
+from packaging.specifiers import SpecifierSet
 
 WORKFLOWS_DIR = Path(__file__).resolve().parents[2] / ".github" / "workflows"
 WORKFLOWS = sorted([*WORKFLOWS_DIR.glob("*.yml"), *WORKFLOWS_DIR.glob("*.yaml")])
@@ -85,6 +87,24 @@ def test_every_job_has_a_timeout(path: Path) -> None:
     # A reusable-workflow job sets its timeouts in the called workflow.
     missing = [n for n, job in jobs.items() if "uses" not in job and "timeout-minutes" not in job]
     assert missing == []
+    assert [n for n, job in jobs.items() if not 0 < job.get("timeout-minutes", 1) <= 30] == []
+
+
+@pytest.mark.parametrize("path", WORKFLOWS, ids=lambda p: p.name)
+def test_no_job_or_step_may_fail_silently(path: Path) -> None:
+    jobs = _load(path)["jobs"].values()
+    assert [
+        s for job in jobs for s in [job, *job.get("steps", [])] if "continue-on-error" in s
+    ] == []
+
+
+@pytest.mark.parametrize("path", WORKFLOWS, ids=lambda p: p.name)
+def test_every_download_is_checksum_verified(path: Path) -> None:
+    steps = _steps(_load(path))
+    setup_uv = [s for s in steps if s.get("uses", "").startswith("astral-sh/setup-uv@")]
+    assert [s for s in setup_uv if not s.get("with", {}).get("checksum")] == []
+    curls = [s["run"] for s in steps if "curl " in s.get("run", "")]
+    assert [run for run in curls if "sha256sum -c" not in run] == []
 
 
 @pytest.mark.parametrize("path", WORKFLOWS, ids=lambda p: p.name)
@@ -101,3 +121,17 @@ def test_ci_keeps_the_required_check_names() -> None:
     jobs = _load(WORKFLOWS_DIR / "ci.yml")["jobs"]
     checks = {job.get("name", job_id) for job_id, job in jobs.items() if "strategy" not in job}
     assert REQUIRED_CI_CHECKS - checks == set()
+
+
+def test_ci_uv_is_inside_the_projects_uv_range() -> None:
+    # Bumping [tool.uv] required-version without PINNED_UV_VERSION would test with another uv.
+    pyproject = tomllib.loads((WORKFLOWS_DIR.parents[1] / "pyproject.toml").read_text("utf-8"))
+    pinned = _load(WORKFLOWS_DIR / "ci.yml")["env"]["PINNED_UV_VERSION"]
+    assert pinned in SpecifierSet(pyproject["tool"]["uv"]["required-version"])
+
+
+def test_ci_test_job_runs_both_layers() -> None:
+    # `-m unit` alone would keep the required check green while contract tests never run.
+    steps = _load(WORKFLOWS_DIR / "ci.yml")["jobs"]["test"]["steps"]
+    runs = [step.get("run", "").strip() for step in steps]
+    assert 'uv run --no-sync pytest -m "unit or contract"' in runs

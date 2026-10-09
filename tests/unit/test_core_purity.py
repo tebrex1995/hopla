@@ -104,15 +104,19 @@ def import_violations(source: str, package: str) -> list[str]:
     return violations
 
 
+def module_package(path: Path) -> str:
+    """The package a file's relative imports resolve from: its folder, for __init__.py too."""
+    return ".".join(path.relative_to(SRC_DIR).parent.parts)
+
+
 def test_core_imports_only_pure_modules() -> None:
     files = sorted(CORE_DIR.rglob("*.py"))
     assert CORE_DIR / "__init__.py" in files  # the scan must not pass because it found nothing
 
     found = {}
     for path in files:
-        # Relative imports resolve from the file's folder, for __init__.py and modules alike.
-        package = ".".join(path.relative_to(SRC_DIR).parent.parts)
-        if violations := import_violations(path.read_text(encoding="utf-8"), package):
+        source = path.read_text(encoding="utf-8")
+        if violations := import_violations(source, module_package(path)):
             found[str(path.relative_to(REPO_ROOT))] = violations
 
     assert found == {}
@@ -136,9 +140,19 @@ def test_core_imports_only_pure_modules() -> None:
         ("from hopla.storage import RawStore", ["hopla.storage"]),
         ("from hopla import storage", ["hopla.storage"]),
         ("from .. import storage", ["hopla.storage"]),
+        ("from ..storage import RawStore", ["hopla.storage"]),
         ("from ...outside import x", ["...outside"]),
         ("mod = __import__('httpx')", ["__import__"]),
         ("exec('import httpx')", ["exec"]),
+        ("x = eval('1')", ["eval"]),
+        ("compile('1', 'f', 'eval')", ["compile"]),
+        ("input()", ["input"]),
+        ("breakpoint()", ["breakpoint"]),
+        # Names that start with an allowed one (re, json, typing) are still other modules.
+        ("import requests", ["requests"]),
+        ("import resource", ["resource"]),
+        ("import jsonschema", ["jsonschema"]),
+        ("from typing_extensions import Self", ["typing_extensions"]),
         ("with open('f') as f:\n    pass", ["open"]),
         ("def load(opener=open):\n    pass", ["open"]),
         ("__builtins__.open('f')", ["__builtins__"]),
@@ -168,3 +182,35 @@ def test_checker_rejects(source: str, expected: list[str]) -> None:
 )
 def test_checker_allows(source: str) -> None:
     assert import_violations(source, "hopla.core") == []
+
+
+def test_relative_imports_in_a_subpackage_resolve_from_it() -> None:
+    assert import_violations("from ... import storage", "hopla.core.sub") == ["hopla.storage"]
+    assert import_violations("from .. import rules", "hopla.core.sub") == []
+
+
+@pytest.mark.parametrize(
+    ("relative", "package"),
+    [
+        ("hopla/core/__init__.py", "hopla.core"),
+        ("hopla/core/rules.py", "hopla.core"),
+        ("hopla/core/sub/x.py", "hopla.core.sub"),
+    ],
+)
+def test_module_package(relative: str, package: str) -> None:
+    assert module_package(SRC_DIR / relative) == package
+
+
+# A tripwire for review: these modules do I/O, read the clock or environment, or import code.
+KNOWN_IMPURE = frozenset(
+    {
+        "asyncio", "builtins", "ctypes", "glob", "http", "importlib", "io", "logging",
+        "multiprocessing", "os", "pathlib", "pickle", "random", "secrets", "select",
+        "shutil", "signal", "socket", "sqlite3", "ssl", "subprocess", "sys", "tempfile",
+        "threading", "time", "urllib.request",
+    }
+)  # fmt: skip
+
+
+def test_the_allowlist_has_no_known_impure_module() -> None:
+    assert {name for name in PURE_STDLIB if name in KNOWN_IMPURE} == set()

@@ -6,7 +6,6 @@ then `ingest`, `reparse`, `replay`, ...). Until then the CLI only offers
 """
 
 import argparse
-import sys
 from collections.abc import Sequence
 from importlib.metadata import version
 
@@ -25,7 +24,3 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.parse_args(argv)  # --help/--version exit 0; unknown arguments exit 2.
     parser.print_help()
     return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())

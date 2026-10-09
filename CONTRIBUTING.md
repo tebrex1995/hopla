@@ -2,7 +2,7 @@
 
 ## Commands
 
-Needs uv 0.12.x (pinned in `pyproject.toml` under `[tool.uv]`); uv installs Python 3.14 from `.python-version`.
+Needs uv 0.12.23 or a later 0.12.x (`required-version` in `pyproject.toml`); uv installs Python 3.14 from `.python-version`.
 
 ```bash
 uv sync --locked                    # install exactly what uv.lock pins

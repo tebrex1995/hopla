@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-pytest_plugins = ["pytester"]  # for the tests of this hook (tests/unit/test_layer_guard.py)
+pytest_plugins = ["pytester"]  # for the tests of this hook (tests/unit/test_collection_hook.py)
 
 TESTS_DIR = Path(__file__).parent
 
@@ -17,6 +17,14 @@ LAYER_MARKERS = {
     "e2e": "e2e",
 }
 
+# pytest-socket markers that switch the guard off or replace the --allow-hosts list.
+SOCKET_OPT_OUTS = ("enable_socket", "allow_hosts")
+
+
+def _turns_network_on(item: pytest.Item) -> bool:
+    fixtures = getattr(item, "fixturenames", ())  # only function items have fixtures
+    return "socket_enabled" in fixtures or any(item.get_closest_marker(m) for m in SOCKET_OPT_OUTS)
+
 
 @pytest.hookimpl(tryfirst=True)  # mark before `-m` deselects
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
@@ -28,8 +36,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     layers = set(LAYER_MARKERS.values())
     for item in items:
         # pytest-socket's opt-outs would let a test reach a source site (NFR-060).
-        fixtures = getattr(item, "fixturenames", ())  # only function items have fixtures
-        if item.get_closest_marker("enable_socket") or "socket_enabled" in fixtures:
+        if _turns_network_on(item):
             raise pytest.UsageError(f"{item.nodeid}: tests may not turn the network guard off")
         if not item.path.is_relative_to(TESTS_DIR):
             continue  # collected from elsewhere (e.g. doctests in src/): not a suite test

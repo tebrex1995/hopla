@@ -1,24 +1,22 @@
-"""Private and secret-bearing paths stay out of the public repo, even if `git add -f`-ed."""
+"""Nothing .gitignore excludes is tracked, even if it was added with `git add -f`.
 
-import shutil
+.gitignore lists the private and secret-bearing paths: the private planning repo (docs/),
+raw recon captures, HAR files, keys and .env files.
+"""
+
 import subprocess
 from pathlib import Path
 
-import pytest
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
-# docs/ is the private planning repo; recon/ and *.har hold raw captures with cookies.
-NEVER_TRACKED = ["docs", "recon", ".env", "*.har", "*.pem", "*.key", "*.p12", "*.pfx"]
 
 
-@pytest.mark.skipif(shutil.which("git") is None, reason="needs git")
-def test_private_paths_are_not_tracked() -> None:
-    tracked = subprocess.run(
-        ["git", "ls-files", "--", *NEVER_TRACKED],
+def test_no_ignored_file_is_tracked() -> None:
+    tracked_but_ignored = subprocess.run(
+        ["git", "ls-files", "--cached", "--ignored", "--exclude-standard", "-z"],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
         check=True,
-    ).stdout.split()
+    ).stdout.split("\0")
 
-    assert tracked == []
+    assert [path for path in tracked_but_ignored if path] == []

@@ -24,6 +24,7 @@ hopla = "hopla.pipeline.cli:main"
 [dependency-groups]
 dev = [
     "mypy>=2.4.0",
+    "packaging>=26.3",
     "pytest>=9.1.1",
     "pytest-socket>=0.8.1",
     "respx>=0.23.1",
@@ -39,7 +40,7 @@ build-backend = "hatchling.build"
 packages = ["src/hopla"]
 
 [tool.uv]
-# CI installs a uv from this range too (setup-uv reads it): same uv minor locally and in CI.
+# Local uv range. CI pins an exact uv inside it (PINNED_UV_* in ci.yml); keep the two in step.
 required-version = ">=0.12.23,<0.13"
 # The build environment isn't in uv.lock, so pin all of it: hatchling and its dependencies.
 build-constraint-dependencies = [

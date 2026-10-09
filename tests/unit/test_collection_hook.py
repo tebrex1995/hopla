@@ -33,13 +33,38 @@ def test_an_unmarked_test_outside_the_layer_folders_stops_the_run(suite: pytest.
     result.stderr.fnmatch_lines(["*tests/test_stray.py::test_stray: put the test under*"])
 
 
-def test_a_marked_test_outside_the_layer_folders_is_accepted(suite: pytest.Pytester) -> None:
-    stray = "import pytest\n\n@pytest.mark.unit\ndef test_stray():\n    pass\n"
+LAYERS = [
+    ("unit", "unit"),
+    ("contract", "contract"),
+    ("scenarios", "scenario"),
+    ("integration", "integration"),
+    ("e2e", "e2e"),
+]
+
+
+@pytest.mark.parametrize(("folder", "marker"), LAYERS)
+def test_each_layer_folder_gets_its_own_marker(
+    suite: pytest.Pytester, folder: str, marker: str
+) -> None:
+    # A wrong mapping would move a layer in or out of CI's `-m "unit or contract"` silently.
+    (suite.path / "tests" / folder).mkdir(exist_ok=True)
+    (suite.path / "tests" / folder / "test_l.py").write_text("def test_l():\n    pass\n")
+
+    result = suite.runpytest(*INNER_RUN_ARGS, f"tests/{folder}/test_l.py", "-m", marker)
+
+    result.assert_outcomes(passed=1)
+
+
+@pytest.mark.parametrize("marker", [marker for _, marker in LAYERS])
+def test_a_marked_test_outside_the_layer_folders_is_accepted(
+    suite: pytest.Pytester, marker: str
+) -> None:
+    stray = f"import pytest\n\n@pytest.mark.{marker}\ndef test_stray():\n    pass\n"
     (suite.path / "tests" / "test_stray.py").write_text(stray)
 
-    result = suite.runpytest(*INNER_RUN_ARGS, "tests", "-m", "unit")
+    result = suite.runpytest(*INNER_RUN_ARGS, "tests/test_stray.py", "-m", marker)
 
-    result.assert_outcomes(passed=2)
+    result.assert_outcomes(passed=1)
 
 
 def test_items_from_outside_tests_are_left_alone(suite: pytest.Pytester) -> None:
@@ -56,8 +81,9 @@ def test_items_from_outside_tests_are_left_alone(suite: pytest.Pytester) -> None
     [
         "import pytest\n\n@pytest.mark.enable_socket\ndef test_net():\n    pass\n",
         "def test_net(socket_enabled):\n    pass\n",
+        "import pytest\n\n@pytest.mark.allow_hosts(['192.0.2.1'])\ndef test_net():\n    pass\n",
     ],
-    ids=["marker", "fixture"],
+    ids=["enable_socket", "socket_enabled", "allow_hosts"],
 )
 def test_a_test_that_turns_the_network_guard_off_stops_the_run(
     suite: pytest.Pytester, test_code: str
