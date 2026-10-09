@@ -46,6 +46,11 @@ jobs:
           echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
           tar -xzf gitleaks.tar.gz gitleaks
           printf '[extend]\nuseDefault = true\n' > gitleaks.toml
+          # A shallow clone would make a known base look unknown and scan a single commit.
+          if [ "$(git -C "$GITHUB_WORKSPACE" rev-parse --is-shallow-repository)" != false ]; then
+            echo "shallow clone: gitleaks would under-scan" >&2
+            exit 1
+          fi
           if git -C "$GITHUB_WORKSPACE" cat-file -e "${BASE}^{commit}" 2>/dev/null; then
             RANGE="${BASE}..${HEAD}"
           else

@@ -204,13 +204,16 @@ def test_module_package(relative: str, package: str) -> None:
 # A tripwire for review: these modules do I/O, read the clock or environment, or import code.
 KNOWN_IMPURE = frozenset(
     {
-        "asyncio", "builtins", "ctypes", "glob", "http", "importlib", "io", "logging",
-        "multiprocessing", "os", "pathlib", "pickle", "random", "secrets", "select",
-        "shutil", "signal", "socket", "sqlite3", "ssl", "subprocess", "sys", "tempfile",
-        "threading", "time", "urllib.request",
+        "asyncio", "atexit", "builtins", "concurrent", "ctypes", "fcntl", "gc", "getpass",
+        "glob", "http", "importlib", "inspect", "io", "logging", "mmap", "multiprocessing",
+        "os", "pathlib", "pickle", "platform", "random", "secrets", "select", "shutil",
+        "signal", "socket", "sqlite3", "ssl", "subprocess", "sys", "tempfile", "threading",
+        "time", "urllib.request", "zipfile",
     }
 )  # fmt: skip
 
 
 def test_the_allowlist_has_no_known_impure_module() -> None:
-    assert {name for name in PURE_STDLIB if name in KNOWN_IMPURE} == set()
+    # Submodules count too: os.path or logging.handlers come with their package.
+    tainted = {n for n in PURE_STDLIB if n in KNOWN_IMPURE or n.split(".")[0] in KNOWN_IMPURE}
+    assert tainted == set()

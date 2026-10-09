@@ -16,6 +16,7 @@ from packaging.specifiers import SpecifierSet
 
 WORKFLOWS_DIR = Path(__file__).resolve().parents[2] / ".github" / "workflows"
 WORKFLOWS = sorted([*WORKFLOWS_DIR.glob("*.yml"), *WORKFLOWS_DIR.glob("*.yaml")])
+ENV_REF = re.compile(r"^\$\{\{\s*env\.(\w+)\s*\}\}$")
 PINNED = re.compile(r"^[\w.-]+/[\w./-]+@[0-9a-f]{40}$")
 READ_ONLY: tuple[dict[str, str], ...] = ({}, {"contents": "read"})
 REQUIRED_CI_CHECKS = {"lint", "types", "test"}
@@ -103,8 +104,27 @@ def test_every_download_is_checksum_verified(path: Path) -> None:
     steps = _steps(_load(path))
     setup_uv = [s for s in steps if s.get("uses", "").startswith("astral-sh/setup-uv@")]
     assert [s for s in setup_uv if not s.get("with", {}).get("checksum")] == []
-    curls = [s["run"] for s in steps if "curl " in s.get("run", "")]
-    assert [run for run in curls if "sha256sum -c" not in run] == []
+    downloads = [s["run"] for s in steps if re.search(r"\b(curl|wget)\b", s.get("run", ""))]
+    assert [run for run in downloads if "sha256sum -c" not in run] == []
+
+
+@pytest.mark.parametrize("path", WORKFLOWS, ids=lambda p: p.name)
+def test_every_setup_uv_checksum_resolves_to_a_sha256(path: Path) -> None:
+    # `${{ env.X }}` with X missing or empty evaluates to "", and setup-uv then skips the check.
+    workflow = _load(path)
+    for job in workflow["jobs"].values():
+        env = {**workflow.get("env", {}), **job.get("env", {})}
+        for step in job.get("steps", []):
+            if step.get("uses", "").startswith("astral-sh/setup-uv@"):
+                raw = str(step["with"].get("checksum", ""))
+                value = env.get(ref[1], "") if (ref := ENV_REF.match(raw)) else raw
+                assert re.fullmatch(r"[0-9a-f]{64}", str(value)), step
+
+
+@pytest.mark.parametrize("path", WORKFLOWS, ids=lambda p: p.name)
+def test_no_check_is_neutralised(path: Path) -> None:
+    runs = [s["run"] for s in _steps(_load(path)) if "run" in s]
+    assert [r for r in runs if re.search(r"\|\|\s*(true|:)(\s|$)|--exit-code[ =]0", r)] == []
 
 
 @pytest.mark.parametrize("path", WORKFLOWS, ids=lambda p: p.name)
@@ -135,3 +155,29 @@ def test_ci_test_job_runs_both_layers() -> None:
     steps = _load(WORKFLOWS_DIR / "ci.yml")["jobs"]["test"]["steps"]
     runs = [step.get("run", "").strip() for step in steps]
     assert 'uv run --no-sync pytest -m "unit or contract"' in runs
+
+
+def test_required_jobs_and_their_steps_never_skip() -> None:
+    # A job or step skipped by `if:` reports success, so a required check would pass doing nothing.
+    jobs = _load(WORKFLOWS_DIR / "ci.yml")["jobs"]
+    required = [
+        job for job_id, job in jobs.items() if job.get("name", job_id) in REQUIRED_CI_CHECKS
+    ]
+    assert [s for job in required for s in [job, *job["steps"]] if "if" in s] == []
+
+
+def test_the_secret_scan_keeps_its_hardening() -> None:
+    # gitleaks is the only secret gate in CI; each of these closes a way to scan less.
+    steps = _load(WORKFLOWS_DIR / "ci.yml")["jobs"]["lint"]["steps"]
+    checkout = next(s for s in steps if s.get("uses", "").startswith("actions/checkout@"))
+    assert checkout["with"]["fetch-depth"] == 0
+    script = next(s for s in steps if s.get("name") == "gitleaks")["run"]
+    for hardening in (
+        "--is-shallow-repository",
+        'RANGE="${HEAD}"',
+        "--ignore-gitleaks-allow",
+        "--config gitleaks.toml",
+        "useDefault = true",
+        "--diff-merges=first-parent",
+    ):
+        assert hardening in script
