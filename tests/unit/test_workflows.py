@@ -181,3 +181,8 @@ def test_the_secret_scan_keeps_its_hardening() -> None:
         "--diff-merges=first-parent",
     ):
         assert hardening in script
+
+
+def test_ci_reads_time_zone_data_only_from_tzdata() -> None:
+    # An OS zoneinfo with other rules must not change CI's answers (ADR-0006, TS-004).
+    assert _load(WORKFLOWS_DIR / "ci.yml")["env"]["PYTHONTZPATH"] == ""

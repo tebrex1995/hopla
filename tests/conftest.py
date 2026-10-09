@@ -1,8 +1,21 @@
 """Suite-wide pytest hooks and fixtures."""
 
+import os
+import zoneinfo
 from pathlib import Path
 
 import pytest
+
+# Time-zone data comes only from the pinned tzdata package, as in production (ADR-0006):
+# an OS zoneinfo with other rules must not change a test's answer.
+zoneinfo.reset_tzpath(to=())
+
+# The developer's own HOPLA_* settings must not change any test, including module-level
+# `Settings()` calls made while tests are collected.
+for _name in [
+    n for n in os.environ if n.upper().startswith("HOPLA_")
+]:  # case-insensitive, as pydantic
+    del os.environ[_name]
 
 pytest_plugins = ["pytester"]  # for the tests of this hook (tests/unit/test_collection_hook.py)
 

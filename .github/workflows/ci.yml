@@ -12,6 +12,7 @@ permissions:
 # An exact uv for every job, checked against its release checksum (linux x86_64). Keep it inside
 # [tool.uv] required-version; bump both by hand (Dependabot doesn't). No UV_ prefix: uv reads those.
 env:
+  PYTHONTZPATH: "" # time-zone data only from the pinned tzdata package (ADR-0006)
   PINNED_UV_VERSION: "0.12.23"
   PINNED_UV_SHA256: 9167d72b3319674b6303c4cbe071854bba13ebdf3d76b1a7cbdc175471fb66d6
 
