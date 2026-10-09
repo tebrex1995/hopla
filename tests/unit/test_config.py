@@ -5,7 +5,7 @@ import os
 from datetime import time, timedelta
 
 import pytest
-from pydantic import ValidationError
+from pydantic import SecretStr, ValidationError
 
 from hopla.config import BUCKETS, CRONS, RELAXATIONS, Profile, Settings, parse_time, parse_times
 from hopla.core.ledger import Unit
@@ -194,3 +194,97 @@ def test_units_are_ordered_by_source() -> None:
         Unit("b", "day"),
         Unit("c", "far"),
     )
+
+
+def test_a_live_runner_must_use_the_s3_store() -> None:
+    # A local folder on a fresh runner would forget the ledger and the budget (NFR-060).
+    with pytest.raises(ValidationError, match="must use the s3 store"):
+        Settings(runner="github")
+
+
+R2 = "https://acct.eu.r2.cloudflarestorage.com"
+
+
+def _s3(
+    endpoint: str | None = R2, key_id: str | None = "id-123", secret: str | None = "secret-456"
+) -> Settings:
+    return Settings(
+        store_backend="s3",
+        s3_endpoint_url=endpoint,
+        s3_access_key_id=None if key_id is None else SecretStr(key_id),
+        s3_secret_access_key=None if secret is None else SecretStr(secret),
+    )
+
+
+@pytest.mark.parametrize(
+    ("key_id", "secret"), [(None, None), ("id-123", None), (None, "s"), ("id-123", " "), ("", "s")]
+)
+def test_the_s3_store_needs_both_keys_and_no_blank_one(
+    key_id: str | None, secret: str | None
+) -> None:
+    with pytest.raises(ValidationError, match="access key id and a secret"):
+        _s3(key_id=key_id, secret=secret)
+
+
+@pytest.mark.parametrize(
+    "endpoint",
+    [None, "http://acct.r2.example.com", "https://user:pw@acct.r2.example.com", "acct.r2"],
+)
+def test_the_s3_endpoint_is_https_with_no_credentials(endpoint: str | None) -> None:
+    with pytest.raises(ValidationError, match="https URL"):
+        _s3(endpoint)
+
+
+def test_a_settings_error_never_shows_the_secret(monkeypatch: pytest.MonkeyPatch) -> None:
+    # A partial secret in a public Actions log isn't masked by GitHub.
+    monkeypatch.setenv("HOPLA_S3_SECRET_ACCESS_KEY", "SUPERSECRET-9f8e7d")
+    monkeypatch.setenv("HOPLA_RUNNER", "github")
+
+    with pytest.raises(ValidationError) as caught:
+        Settings()
+
+    assert "9f8e7d" not in str(caught.value) and "SUPERSECRET" not in str(caught.value)
+
+
+def test_a_complete_s3_store_is_accepted_and_hides_its_secrets() -> None:
+    settings = Settings(
+        runner="github",
+        store_backend="s3",
+        s3_endpoint_url="https://acct.eu.r2.cloudflarestorage.com",
+        s3_access_key_id=SecretStr("id-123"),
+        s3_secret_access_key=SecretStr("secret-456"),
+    )
+
+    assert settings.s3_bucket == "hopla-raw"
+    assert "secret-456" not in repr(settings) and "id-123" not in repr(settings)
+
+
+def test_the_store_settings_come_from_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("HOPLA_STORE_ROOT", "/tmp/raw")
+    monkeypatch.setenv("HOPLA_STORE_CALL_TIMEOUT_S", "12.5")
+
+    settings = Settings()
+
+    assert (str(settings.store_root), settings.store_call_timeout_s, settings.runner) == (
+        "/tmp/raw",
+        12.5,
+        "dev",
+    )
+
+
+@pytest.mark.parametrize("runner", ["github", "mac", "vps"])
+def test_every_live_runner_must_use_the_s3_store(runner: str) -> None:
+    with pytest.raises(ValidationError, match="must use the s3 store"):
+        Settings(runner=runner)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    "change", [{"store_call_timeout_s": 0}, {"runner": "laptop"}, {"store_backend": "gcs"}]
+)
+def test_store_settings_refuse_bad_values(change: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        Settings(**change)  # type: ignore[arg-type]
+
+
+def test_conditional_put_is_off_until_the_emulator_proves_it() -> None:
+    assert Settings().s3_conditional_put is False
