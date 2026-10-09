@@ -13,10 +13,12 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import time, timedelta
 from enum import StrEnum
+from pathlib import Path
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Literal, Self
+from urllib.parse import urlsplit
 
-from pydantic import PositiveInt, model_validator
+from pydantic import PositiveFloat, PositiveInt, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from hopla.core.ledger import Unit
@@ -118,7 +120,11 @@ BUCKETS: Mapping[str, _BucketDef] = MappingProxyType(
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="HOPLA_", frozen=True, extra="forbid")
+    # hide_input_in_errors: a validation error must never echo the input, which holds the
+    # store secrets (a partial secret in a public Actions log isn't masked).
+    model_config = SettingsConfigDict(
+        env_prefix="HOPLA_", frozen=True, extra="forbid", hide_input_in_errors=True
+    )
 
     profile: Profile = Profile.PUBLIC
     # The units per source until `config/sources.yaml` arrives (T-R0-05). Trains first (D-25).
@@ -127,6 +133,19 @@ class Settings(BaseSettings):
         "notices_srbijavoz": ("notices",),
     }
     budget_per_host_day: PositiveInt = 1000  # requests per registrable domain (ADR-0002 §3)
+
+    # Where this process runs (ADR-0004 S8/S11 `active_runner`). `dev` never collects live.
+    runner: Literal["dev", "github", "mac", "vps"] = "dev"
+    # The raw store (ADR-0003): R2 over S3 in production, a local folder for development.
+    store_backend: Literal["local", "s3"] = "local"
+    store_root: Path = Path("local-data/raw")  # gitignored
+    s3_endpoint_url: str | None = None
+    s3_bucket: str = "hopla-raw"
+    s3_region: str = "auto"  # R2
+    s3_access_key_id: SecretStr | None = None
+    s3_secret_access_key: SecretStr | None = None
+    s3_conditional_put: bool = False  # If-None-Match on create-only writes, once R2 is verified
+    store_call_timeout_s: PositiveFloat = 30.0  # anyio.fail_after around each store call
 
     @model_validator(mode="before")
     @classmethod
@@ -139,6 +158,21 @@ class Settings(BaseSettings):
         ):
             raise ValueError(f"unknown settings in the environment: {unknown}")
         return data
+
+    @model_validator(mode="after")
+    def _store_fits_the_runner(self) -> Self:
+        # A live runner on a local folder would lose the run ledger and the budget between runs,
+        # so it could exceed the daily request budget (NFR-060).
+        if self.runner != "dev" and self.store_backend == "local":
+            raise ValueError(f"runner {self.runner!r} must use the s3 store, not a local folder")
+        if self.store_backend == "s3":
+            keys = (self.s3_access_key_id, self.s3_secret_access_key)
+            if not all(k is not None and k.get_secret_value().strip() for k in keys):
+                raise ValueError("the s3 store needs an access key id and a secret")
+            url = urlsplit(self.s3_endpoint_url or "")
+            if url.scheme != "https" or not url.hostname or url.username or url.password:
+                raise ValueError("the s3 endpoint is an https URL with no credentials in it")
+        return self
 
     def crons(self) -> tuple[str, ...]:
         return CRONS[self.profile]
