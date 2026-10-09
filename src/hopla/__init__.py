@@ -1,1 +1,1 @@
-__version__ = "0.1.0"
+"""Hopla: a Serbian train + bus planner with change alerts."""
