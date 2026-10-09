@@ -6,6 +6,7 @@ then `ingest`, `reparse`, `replay`, ...). Until then the CLI only offers
 """
 
 import argparse
+import zoneinfo
 from collections.abc import Sequence
 from importlib.metadata import version
 
@@ -20,6 +21,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    # Time-zone data comes only from the pinned tzdata package, never the OS (ADR-0006).
+    zoneinfo.reset_tzpath(to=())
     parser = build_parser()
     parser.parse_args(argv)  # --help/--version exit 0; unknown arguments exit 2.
     parser.print_help()
